@@ -5,10 +5,27 @@ require 'active_support/inflector'
 
 class SQLObject
   def self.columns
-    # ...
+    return @columns if @columns 
+    columns = DBConnection.execute2(<<-SQL)
+      SELECT
+        *
+      FROM
+        #{self.table_name}
+      LIMIT
+        0
+    SQL
+    @columns = columns.first.map! {|ele| ele.to_sym}
   end
 
   def self.finalize!
+    self.columns.each do |col|
+      define_method("#{col}") do    
+        self.attributes[col]
+      end
+      define_method("#{col}=") do |val|
+        self.attributes[col] = val
+      end   
+    end
   end
 
   def self.table_name=(table_name)
@@ -32,11 +49,17 @@ class SQLObject
   end
 
   def initialize(params = {})
-    # ...
+    params.each do |attr_name, val|
+      if self.class.columns.include?(attr_name.to_sym)
+        self.send("#{attr_name}=", params[attr_name])
+      else
+        raise "unknown attribute '#{attr_name}'"
+      end
+    end
   end
 
   def attributes
-    # ...
+    @attributes ||= {}
   end
 
   def attribute_values
