@@ -36,16 +36,38 @@ class SQLObject
     @table_name || self.name.underscore.pluralize
   end
 
-  def self.all
-    # ...
+  def self.all  
+    results ||= DBConnection.execute(<<-SQL)
+        SELECT
+         '#{self.table_name}'.*
+        FROM
+         '#{self.table_name}'
+      SQL
+    self.parse_all(results)
   end
 
   def self.parse_all(results)
-    # ...
+    arr = []
+    results.each do |attr_hash|
+      arr << self.new(attr_hash)
+    end
+    arr
   end
 
   def self.find(id)
-    # ...
+    results = DBConnection.execute(<<-SQL, id)
+      SELECT
+        '#{self.table_name}'.*
+      FROM
+        '#{self.table_name}'
+      WHERE
+        '#{self.table_name}'.id = ?
+    SQL
+    # we dont need to call self.class.parse_all because we
+    # are calling this inside a class method
+    # same goes to self.table_name, actually we dont
+    # need to call self.table_name
+    parse_all(results).first
   end
 
   def initialize(params = {})
@@ -67,7 +89,13 @@ class SQLObject
   end
 
   def insert
-    # ...
+    col_name = self.columns.drop(1).join(',') 
+    question_marks = (["?"] * col_name.length).join(',')
+    DBConnection.execute(<<-SQL, col_name, question_marks)
+      INSERT INTO
+        '#{self.table_name}' ?
+      VALUES
+    SQL
   end
 
   def update
