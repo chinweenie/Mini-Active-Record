@@ -1,5 +1,7 @@
 require_relative 'db_connection'
 require 'active_support/inflector'
+require_relative '02_searchable'
+require_relative '03_associatable'
 require 'byebug'
 
 # NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
@@ -39,11 +41,11 @@ class SQLObject
   end
 
   def self.all  
-    results ||= DBConnection.execute(<<-SQL)
+    results = DBConnection.execute(<<-SQL)
         SELECT
-         '#{self.table_name}'.*
+         *
         FROM
-         '#{self.table_name}'
+         #{self.table_name}
       SQL
     self.parse_all(results)
   end
@@ -73,13 +75,14 @@ class SQLObject
   end
 
   def initialize(params = {})
-    params.each do |attr_name, val|
-      if self.class.columns.include?(attr_name.to_sym)
-        self.send("#{attr_name}=", params[attr_name])
-      else
-        raise "unknown attribute '#{attr_name}'"
-      end
+    keys = params.keys.map(&:to_sym).each do |key|
+      raise "unknown attribute '#{key}'" unless self.class.columns.include?(key)
     end
+
+    params.each do |key, val|
+      self.send("#{key}=", val)
+    end
+    
   end
 
   def attributes

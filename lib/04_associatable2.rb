@@ -1,4 +1,6 @@
 require_relative '03_associatable'
+require 'active_support/inflector'
+
 
 # Phase IV
 module Associatable
@@ -9,15 +11,27 @@ module Associatable
       through_options = self.class.assoc_options[through_name]
       source_options = through_options.model_class.assoc_options[source_name]
 
-      through_table = through_options.table_name 
-      through_pk = through_options.primary_key 
-      through_fk = through_options.foreign_key  
+      # Cat belongs to human, so cat has foreign key
+      through_table = through_options.table_name #humans
+      through_pk = through_options.primary_key  #human.id
+      through_fk = through_options.foreign_key  #cat.owner_id
 
-      source_table = source_options.table_name 
-      source_pk = source_options.primary_key 
-      source_fk = source_options.foreign_key  
+      # Human belongs to a house, so it has a foreign key
+      source_table = source_options.table_name #houses
+      source_pk = source_options.primary_key #house.id     
+      source_fk = source_options.foreign_key  #human.house_id
 
       key_val = self.send(through_fk)
+
+      # SELECT
+      #   houses.*  
+      # FROM
+      #   humans 
+      # JOIN
+      #   houses ON houses.id = humans.house_id 
+      # WHERE  
+      #   humans.id = cats.owner_id
+
       results = DBConnection.execute(<<-SQL, key_val)
         SELECT
           #{source_table}.*
@@ -31,6 +45,15 @@ module Associatable
           #{through_table}.#{through_pk} = ?
       SQL
       source_options.model_class.parse_all(results).first
+    end
+  end
+
+  def has_many_through(name, through_name, source_name)
+    # Gym has_many :pokemons, through: :trainers, source: :pokemons
+    through_assoc = "humans".to_sym if through_name == "human"
+    through_assoc ||= through_name.to_s.tableize.to_sym
+    define_method(name) do
+      
     end
   end
 end
