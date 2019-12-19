@@ -46,3 +46,12 @@ trainer_id      | integer   |
 * `all`
 * `first`
 * `last`
+* `where(params)`
+* `find(params)`
+* `insert`
+* `update`
+* `save`
+* `belongs_to(name, options)`
+* `has_many(name, options)`
+* `has_one_through(name, through_name, source_name)`
+* `has_many_through(name, through_name, source_name)`
