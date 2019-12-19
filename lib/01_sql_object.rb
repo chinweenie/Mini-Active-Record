@@ -2,6 +2,7 @@ require_relative 'db_connection'
 require 'active_support/inflector'
 require_relative '02_searchable'
 require_relative '03_associatable'
+require_relative '04_associatable2'
 require 'byebug'
 
 # NB: the attr_accessor we wrote in phase 0 is NOT used in the rest
@@ -72,6 +73,22 @@ class SQLObject
     # same goes to self.table_name, actually we dont
     # need to call self.table_name
     parse_all(results).first
+  end
+
+  def self.first 
+    results = DBConnection.execute(<<-SQL)
+      SELECT
+        #{self.table_name}.*
+      FROM  
+        #{self.table_name}
+      LIMIT
+        1
+    SQL
+    self.parse_all(results)[0]
+  end
+
+  def self.last 
+    self.all[-1]
   end
 
   def initialize(params = {})

@@ -14,10 +14,11 @@ CREATE TABLE trainers (
 CREATE TABLE pokemons (
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    gym_id INTEGER,
+    trainer_id INTEGER,
+    type VARCHAR(255) NOT NULL,
 
     FOREIGN KEY(trainer_id) REFERENCES trainers(id)
-)
+);
 
 
 INSERT INTO
